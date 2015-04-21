@@ -42,6 +42,9 @@ class Scilab2Py(object):
     ----------
     executable : str, optional
         Name of the Scilab executable, can be a system path.
+    call_args : str, optional
+        Pass command-line arguments to the Scilab executable.
+        By default the '-nw' argument is passed.
     logger : logging object, optional
         Optional logger to use for Scilab2Py session
     timeout : float, opional
@@ -56,7 +59,8 @@ class Scilab2Py(object):
     """
 
     def __init__(self, executable=None, logger=None, timeout=None,
-                 oned_as='row', temp_dir=None, convert_to_float=True):
+                 oned_as='row', temp_dir=None, convert_to_float=True,
+                 call_args='-nw'):
         """Start Scilab and create our MAT helpers
         """
         self._oned_as = oned_as
@@ -71,6 +75,7 @@ class Scilab2Py(object):
         #self.logger.setLevel(logging.DEBUG)
         self._session = None
         self._convert_to_float = convert_to_float
+        self._call_args = call_args
         self.restart()
 
     @property
@@ -323,7 +328,7 @@ class Scilab2Py(object):
         self._writer = MatWrite(self._temp_dir, self._oned_as,
                                 self._convert_to_float)
         self._session = _Session(self._executable,
-                                 self._reader.out_file, self.logger)
+                                 self._reader.out_file, self.logger, self._call_args)
 
     # --------------------------------------------------------------
     # Private API
@@ -573,7 +578,7 @@ class _Session(object):
     """Low-level session Scilab session interaction.
     """
 
-    def __init__(self, executable, outfile, logger):
+    def __init__(self, executable, outfile, logger, call_args='-nw'):
         self.timeout = int(1e6)
         self.read_queue = queue.Queue()
         self.proc = self.start(executable)
@@ -582,6 +587,7 @@ class _Session(object):
         self.outfile = outfile
         self.set_timeout()
         self.logger = logger
+        self.call_args = call_args
         atexit.register(self.close)
 
     def start(self, executable):
@@ -592,6 +598,9 @@ class _Session(object):
         ==========
         executable : str
             Name or path to Scilab process.
+        call_args : str, optional
+            Pass command-line arguments to the Scilab executable.
+            By default the '-nw' argument is passed.
 
         Returns
         =======
@@ -629,7 +638,7 @@ class _Session(object):
             executable = 'scilab'
 
         try:
-            proc = subprocess.Popen([executable, '-nw'],
+            proc = subprocess.Popen([executable, call_args],
                                     **kwargs)
         except OSError:  # pragma: no cover
             raise Scilab2PyError(errmsg)
