@@ -328,7 +328,8 @@ class Scilab2Py(object):
         self._writer = MatWrite(self._temp_dir, self._oned_as,
                                 self._convert_to_float)
         self._session = _Session(self._executable,
-                                 self._reader.out_file, self.logger, self._call_args)
+                                 self._reader.out_file, self.logger,
+                                 self._call_args)
 
     # --------------------------------------------------------------
     # Private API
@@ -581,13 +582,13 @@ class _Session(object):
     def __init__(self, executable, outfile, logger, call_args='-nw'):
         self.timeout = int(1e6)
         self.read_queue = queue.Queue()
+        self.call_args = call_args
         self.proc = self.start(executable)
         self._first = True
         self.stdout = sys.stdout
         self.outfile = outfile
         self.set_timeout()
         self.logger = logger
-        self.call_args = call_args
         atexit.register(self.close)
 
     def start(self, executable):
