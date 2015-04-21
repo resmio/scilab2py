@@ -638,7 +638,7 @@ class _Session(object):
             executable = 'scilab'
 
         try:
-            proc = subprocess.Popen([executable, call_args],
+            proc = subprocess.Popen([executable, self.call_args],
                                     **kwargs)
         except OSError:  # pragma: no cover
             raise Scilab2PyError(errmsg)
